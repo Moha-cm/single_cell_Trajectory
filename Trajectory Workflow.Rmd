@@ -1,0 +1,236 @@
+---
+title: "Seurat Trajectory Analyis"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+library(Seurat)
+library(dplyr)
+library(tidyverse)
+library(SeuratWrappers)
+library(monocle3)
+library(ggplot2)
+```
+
+
+
+# Reading the Seurat object
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+IPF_processed <- readRDS(r"(D:\A\App\processed_data.rds)")
+```
+
+
+
+
+```{r,warning=FALSE,message=FALSE}
+
+identity_labels <- IPF_processed$orig.ident
+unique_identity_labels <- unique(identity_labels)
+print(unique_identity_labels)
+
+cluster_labels <- IPF_processed$seurat_clusters
+clus_identity_labels <- unique(cluster_labels)
+print(clus_identity_labels)
+
+
+IPF_processed@meta.data[["ident"]] <-IPF_processed@active.ident
+
+```
+
+
+# **Step 1: convert to seurat object to celll data object**
+
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+cds <- as.cell_data_set(IPF_processed,group.by = 'ident')
+```
+
+
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+# changing the assay name 
+
+DefaultAssay(IPF_processed) <- "RNA"
+
+
+# setting  gene annotaion 
+fData(cds)$gene_short_name <- rownames(fData(cds))
+
+```
+
+
+
+# **step 2 Cluster cells (using clustering info from seurat's UMAP)**
+
+
+## Assing all the cells  to one  Partion
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+recreate.partion  <- c(rep(1,length(cds@colData@rownames)))
+names(recreate.partion)  <- cds@colData@rownames
+recreate.partion <- as.factor(recreate.partion)
+
+cds@clusters$UMAP$partitions <- recreate.partion
+
+```
+
+## Assiging the cluster information
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+list_cluster <- IPF_processed@active.ident
+cds@clusters$UMAP$clusters <- list_cluster
+```
+
+
+## Assign UMAP coordiantes - cell embeddings 
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+cds@int_colData@listData$reducedDims$UMAP  <- IPF_processed@reductions$umap@cell.embeddings
+```
+
+
+
+# **Plot  the cluster  before learning the trajectory**
+```{r,warning=FALSE,message=FALSE}
+cluster_no_before <- plot_cells(cds,color_cells_by = 'seurat_clusters',
+                             label_groups_by_cluster = FALSE,
+                             group_label_size = 5)+
+  theme(legend.position = "right")
+
+cluster_before <- plot_cells(cds,color_cells_by = 'ident',
+           label_groups_by_cluster = FALSE,
+           group_label_size = 5)+
+  theme(legend.position = "right")
+
+print(cluster_before)
+print(cluster_no_before)
+```
+
+# **step3 Learning the Trajectory **
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+cds <- learn_graph(cds, use_partition = FALSE)
+```
+
+
+
+# **Plot  the cluster After learning the trajectory**
+```{r,warning=FALSE,message=FALSE}
+# plot after learning 
+cluster_no_after<- plot_cells(cds,color_cells_by = 'seurat_clusters',
+                                label_groups_by_cluster = FALSE,
+                                group_label_size = 5)+
+  theme(legend.position = "right")
+
+cluster_after <- plot_cells(cds,color_cells_by = 'ident',
+                             label_groups_by_cluster = FALSE,
+                             group_label_size = 5)+
+  theme(legend.position = "right")
+
+print(cluster_no_after)
+print(cluster_after)
+```
+
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+# getting the unique cluster names 
+cluster_names <- as.character(clusters(cds))
+
+unique_clusters <- unique(cluster_names)
+print(unique_clusters)
+```
+
+# **Step3 Order the cells based on the pseudotime  analysis**
+
+```{r,warning=FALSE,message=FALSE}
+#setting the root to get the pseudotime , here  ["Adventitia"] as taken root
+
+cds <- order_cells(cds,reduction_method = 'UMAP',root_cells = colnames(cds[,clusters(cds) == "Alveolar"]))
+```
+
+
+# **Plot based on the oreder of cells of Pseudotime**
+
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+
+a<-plot_cells(cds,color_cells_by = 'pseudotime',
+           label_groups_by_cluster = FALSE,
+           label_branch_points = FALSE,
+           label_roots = FALSE,
+           group_label_size = 5)+
+  theme(legend.position = "right")
+
+b <-plot_cells(cds,color_cells_by = 'pseudotime',
+           label_groups_by_cluster = FALSE,
+           label_branch_points = FALSE,
+           label_roots = FALSE,
+           group_label_size = 5)+
+  theme(legend.position = "right")
+print(a)
+print(b)
+```
+
+
+# **step4 Cells oredered by monocle3 pseudotime and visulaize the range of pseudotime**
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+
+cds$molocle3_pseudotime <- pseudotime(cds)
+data.pseudo <- as.data.frame(colData(cds))
+```
+
+
+# **Box plot based on the Median value of Pseudotime**
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+boxplot <- ggplot(data.pseudo, aes(x = molocle3_pseudotime, y = reorder(ident, molocle3_pseudotime, FUN = median), fill = ident)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of molocle3_pseudotime by ident",
+       x = "molocle3_pseudotime",
+       y = "ident") +
+  theme_minimal()
+
+
+print(boxplot)
+```
+
+
+# **step 4 To find the genes that expressed as the moves in the trajectory **
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+cds <- estimate_size_factors(cds)
+## Add gene names into CDS
+cds@rowRanges@elementMetadata@listData[["gene_short_name"]] <- rownames(cds[["RNA"]])
+
+Differenial_expressed_genes<- graph_test(cds,neighbor_graph = "principal_graph",cores = 3)
+
+#View(Differenial_expressed_genes)
+
+differential_genes_filtered <-Differenial_expressed_genes %>%
+  arrange(q_value) %>%
+  filter(status=="OK") 
+  
+```
+```{r}
+head(differential_genes_filtered)
+```
+
+# **Ploting the Diffrential Expressed  genes 
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+FeaturePlot(IPF_processed,features = c("C1QC","ARHGAP30","CCM2L","SOX7"))
+```
+
+#**visuaalizion pseudotime in seurat**
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+IPF_processed$pseudotime <- pseudotime(cds)
+FeaturePlot(IPF_processed,features ="pseudotime",,label = T )
+```
+
+
+
