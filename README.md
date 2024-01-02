@@ -23,7 +23,7 @@ Users may be able to upload their seurat data or use create seurat dataset with 
 use **packages_install.R** file ,to download the packages required for the dashboard 
 
 
-Dowload the source files **global.R**,**Trajectory_app.R**,**packages_install.R**  from repo  and  use the bellow commandas to run
+Dowload the source files **global.R**,**Trajectory_app.R**,**packages_install.R**  from repo  and  use the bellow command to run
 
 ## Run the application using the following command
 ```
