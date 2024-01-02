@@ -8,7 +8,7 @@ The primary goal of the tool is to facilitate trajectory analysis on scRNA-seq d
 
 ## Approach
 
-1. **Technology Stack::**
+1. **Technology Stack:**
        **R Shiny:** The tool is built using the R Shiny framework, which allows for the creation of interactive web applications directly from R.
 
 2. **Data Input:**
@@ -29,4 +29,4 @@ Dowload the source files from repo  and  use the bellow commandas to run
 ```
 shiny::runApp('Trajectory_app.R')
 ```
-This will launch the Rshipy application in your browser.
+This will launch the Rshipy application.
