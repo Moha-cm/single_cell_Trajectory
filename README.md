@@ -1,6 +1,6 @@
 # Project Title : single_cell_Trajectory Analysis
 
-single_cell_Trajectory Analysis: A User-Friendly Tool Using R shiny for datananlysis tool for ScRNaseq gene expression data
+Single_cell_Trajectory Analysis: A User-Friendly Tool Using R shiny for datananlysis tool for ScRNaseq gene expression data
 
 ## **Overview**
 The primary goal of the tool is to facilitate trajectory analysis on scRNA-seq data. Trajectory analysis helps in understanding the developmental paths of individual cells over time, providing insights into cell differentiation, transitions, and heterogeneity.
