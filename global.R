@@ -11,23 +11,14 @@ library(shinybusy)
 library(glue)
 library(markdown)
 library(ggthemes)
-library(tidyverse)
 library(plotly)
 library(monocle3)
-library(Seurat)
 library(dplyr)
 library(tidyverse)
 library(SeuratWrappers)
-library(monocle3)
 library(SingleCellExperiment)
 
 
-
-
-
-
-
-# Validating the file and the file type
 
 
 # Read in file and perform validation.
@@ -96,10 +87,6 @@ rp_plot_gene  <- function(obj, gene) {
 }
 
 
-
-
-
-
 #function without trajectory 
 
 create_plot_indent <- function(obj) {
@@ -118,9 +105,6 @@ create_plot_clusters <- function(obj) {
       
    return(cluster_plot)
 }
-
-
-
 
 
 
@@ -175,9 +159,9 @@ create_trajectory_plot_indent <- function(obj) {
 
 
 # for Pseudotime analysis 
-pseudotime_analysis <- function(cds, set_root = "Adventitia") {
+pseudotime_analysis <- function(cds) {
   # Order the cells based on the pseudotime analysis
-  root_cells <- colnames(cds[, clusters(cds) == set_root])
+  root_cells <- colnames(cds[, clusters(cds) == "Adventitia"])
   cds <- order_cells(cds, reduction_method = 'UMAP', root_cells = root_cells)
   return(cds)
 }
@@ -211,10 +195,6 @@ df_genes <- function(cds){
       arrange(q_value) %>%
       filter(status=="OK")
 }
-
-
-# =========================================Plot sections ================================================================================
-
 
 
 
@@ -293,43 +273,5 @@ create_boxplot <- function(data, x_col, y_col,fill_v,a = median) {
          y = y_col) +
     theme_minimal()
 }
-
-
-
-
-# create_boxplot <- function(data, x_var, y_var, grp = "median", fill_v = "seurat_clusters", x_label = NULL, y_label = NULL) {
-#   # Convert string variables to symbols
-#   x_var_sym <- as.name(x_var)
-#   y_var_sym <- as.name(y_var)
-#   grp_sym <- as.name(grp)
-#   fill_v_sym <- as.name(fill_v)
-
-#   # Create a plotly box plot
-#   boxplot <- plot_ly(data, 
-#                      x = ~eval(x_var_sym),
-#                      y = ~eval(y_var_sym),
-#                      type = "box",
-#                      color = ~eval(fill_v_sym),
-#                      group = ~eval(grp_sym),
-#                      boxpoints = "all",  # Show all data points
-#                      x_label =  x_var_sym,
-#                      y_label = y_var_sym
-                     
-#   ) %>%
-#     layout(title = NULL, xaxis = list(title = x_label), yaxis = list(title = y_label))
-
-#   return(boxplot)
-# }
-
-
-
-
-
-# 
-
-
-
-
-
 
 
