@@ -60,6 +60,69 @@ load_seurat_obj <- function(path){
 }
 
 
+#2d viloen plot 
+violen_plot_gene  <- function(obj, gene) {
+    if (gene %in% rownames(obj)) {
+        vp <- VlnPlot(obj, features = gene)
+    } else {
+        vp <- ggplot() + 
+            theme_void() + 
+            VlnPlot(obj, features = gene) +
+            theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))
+    }
+    return(vp)
+}
+
+
+# dimplot
+generate_dim_plot <- function(obj, group.by) {
+    dim_plot <- DimPlot(obj, reduction = "umap", group.by = group.by,label =TRUE)
+    return(dim_plot)
+}
+
+
+
+#2d viloen plot 
+rp_plot_gene  <- function(obj, gene) {
+    if (gene %in% rownames(obj)) {
+        rp <- RidgePlot(obj, features = gene)
+    } else {
+        rp <- ggplot() + 
+            theme_void() + 
+            RidgePlot(obj, features = gene) +
+            theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))
+    }
+    return(rp)
+}
+
+
+
+
+
+
+#function without trajectory 
+
+create_plot_indent <- function(obj) {
+   
+   cluster_plot <- plot_cells(obj, color_cells_by = "ident", label_groups_by_cluster = FALSE, group_label_size = 5) +
+      theme(legend.position = "right")
+      
+   return(cluster_plot)
+}
+
+
+create_plot_clusters <- function(obj) {
+   
+   cluster_plot <- plot_cells(obj, color_cells_by = "seurat_clusters", label_groups_by_cluster = FALSE, group_label_size = 5) +
+      theme(legend.position = "right")
+      
+   return(cluster_plot)
+}
+
+
+
+
+
 
 
 # function for trajectory learning 
@@ -92,9 +155,19 @@ learning_trajectories <- function(obj) {
     return(cds)
     }
 
-create_trajectory_plot <- function(obj) {
+create_trajectory_plot_clusters <- function(obj) {
    
-   cluster_plot <- plot_cells(obj, color_cells_by = 'seurat_clusters', label_groups_by_cluster = FALSE, group_label_size = 5) +
+   cluster_plot <- plot_cells(obj, color_cells_by = "seurat_clusters", label_groups_by_cluster = FALSE, group_label_size = 5) +
+      theme(legend.position = "right")
+      
+   return(cluster_plot)
+}
+
+
+
+create_trajectory_plot_indent <- function(obj) {
+   
+   cluster_plot <- plot_cells(obj, color_cells_by = "ident", label_groups_by_cluster = FALSE, group_label_size = 5) +
       theme(legend.position = "right")
       
    return(cluster_plot)
